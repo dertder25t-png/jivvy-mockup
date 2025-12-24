@@ -48,6 +48,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             size="sm"
             onClick={onClose}
             className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+            aria-label="Close settings"
           >
             <X className="w-4 h-4" />
           </Button>
