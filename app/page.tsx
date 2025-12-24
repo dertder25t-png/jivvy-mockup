@@ -135,7 +135,9 @@ export default function Home() {
           variant="ghost"
           size="sm"
           onClick={() => setSettingsOpen(true)}
-          className="fixed top-4 right-4 z-20 opacity-0 hover:opacity-100 transition-opacity text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          className="fixed top-4 right-4 z-20 opacity-40 focus-visible:opacity-100 hover:opacity-100 transition-opacity text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          aria-label="Global Settings"
+          title="Global Settings"
         >
           <SettingsIcon className="w-4 h-4" />
         </Button>
