@@ -3,6 +3,7 @@
 import { Settings as SettingsIcon, X, Cloud, HardDrive, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -11,6 +12,21 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   if (!isOpen) return null;
+
+  const [alwaysOpenWorkspace, setAlwaysOpenWorkspace] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const pref = window.localStorage.getItem("alwaysOpenWorkspace");
+    setAlwaysOpenWorkspace(pref === "true");
+  }, []);
+
+  const toggleAlwaysOpen = (value: boolean) => {
+    setAlwaysOpenWorkspace(value);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("alwaysOpenWorkspace", value ? "true" : "false");
+    }
+  };
 
   return (
     <>
@@ -39,6 +55,28 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
         {/* Settings Content */}
         <div className="flex-1 overflow-auto p-6">
+          {/* Startup */}
+          <div className="mb-8">
+            <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-4">
+              Startup
+            </h3>
+            <label className="flex items-center justify-between p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer transition-colors">
+              <div>
+                <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                  Always open to workspace
+                </div>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Skip dashboard when launching
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={alwaysOpenWorkspace}
+                onChange={(e) => toggleAlwaysOpen(e.target.checked)}
+                className="w-5 h-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+              />
+            </label>
+          </div>
           {/* Sync Settings */}
           <div className="mb-8">
             <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HomeScreen from "@/components/HomeScreen";
@@ -60,6 +60,26 @@ export default function Home() {
     setCurrentPageId(pageId);
     setCurrentPageTitle(pageData[pageId]?.title || "Untitled");
     setCurrentScreen("page");
+    // Persist last opened for Resume + direct open behavior
+    if (typeof window !== "undefined") {
+      const entry = {
+        id: pageId,
+        type: pageData[pageId]?.hasStudy ? ("study" as const) : ("project" as const),
+        title: pageData[pageId]?.title || "Untitled",
+        subtitle: pageData[pageId]?.hasStudy ? "Study: 12 study cards" : "2 tasks",
+        ts: Date.now(),
+      };
+      try {
+        const raw = window.localStorage.getItem("lastOpenedItems");
+        const arr = raw ? JSON.parse(raw) : [];
+        const filtered = Array.isArray(arr) ? arr.filter((x: any) => x.id !== entry.id) : [];
+        window.localStorage.setItem("lastOpenedItems", JSON.stringify([entry, ...filtered].slice(0, 10)));
+        window.localStorage.setItem("lastPageId", pageId);
+        window.localStorage.setItem("lastPageTitle", entry.title);
+      } catch {
+        // ignore
+      }
+    }
   };
 
   const handleBackToHome = () => {
@@ -82,6 +102,30 @@ export default function Home() {
     { id: "1", name: "Sarah", color: "#3b82f6" },
     { id: "2", name: "Mike", color: "#10b981" },
   ];
+
+  // Dashboard optional: open last active page if available
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const lastId = window.localStorage.getItem("lastPageId");
+      const lastTitle = window.localStorage.getItem("lastPageTitle") || "Untitled";
+      const alwaysOpen = window.localStorage.getItem("alwaysOpenWorkspace");
+      // If user was working before (lastId exists), or they opted to always open workspace
+      if (lastId && lastId.length > 0) {
+        setCurrentPageId(lastId);
+        setCurrentPageTitle(lastTitle);
+        setCurrentScreen("page");
+      } else if (alwaysOpen === "true") {
+        // Open a default workspace when preferred and no last page exists
+        const fallbackId = "custom-hooks";
+        setCurrentPageId(fallbackId);
+        setCurrentPageTitle(pageData[fallbackId]?.title || "Workspace");
+        setCurrentScreen("page");
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   return (
     <div className="relative">
