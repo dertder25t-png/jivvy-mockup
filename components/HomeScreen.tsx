@@ -124,6 +124,13 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
       icon: Calendar,
       context: "3 action items",
     },
+    {
+      id: "unscheduled-demo",
+      type: "task",
+      title: "Quarterly Goals Review",
+      subtitle: "To be scheduled",
+      icon: ClipboardList,
+    },
     ...createdAsRelevant,
   ];
   const pinned: RelevantItem[] = [
@@ -155,8 +162,12 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
       let changed = false;
       visibleItems.forEach((item, idx) => {
         if (next[item.id] === undefined) {
-          // 20% chance of being unscheduled for demo
-          next[item.id] = Math.random() > 0.8 ? null : idx % 7;
+          if (item.id === "unscheduled-demo") {
+            next[item.id] = null;
+          } else {
+            // 20% chance of being unscheduled for demo
+            next[item.id] = Math.random() > 0.8 ? null : idx % 7;
+          }
           changed = true;
         }
       });
