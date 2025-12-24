@@ -5,19 +5,30 @@ import { Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HomeScreen from "@/components/HomeScreen";
 import PageWorkspace from "@/components/PageWorkspace";
+import ProjectDashboard from "@/components/ProjectDashboard"; // Imported
 import PDFSidePanel from "@/components/PDFSidePanel";
 import CanvasOverlay from "@/components/CanvasOverlay";
 import StudyMode from "@/components/StudyMode";
 import QuizMode from "@/components/QuizMode";
 import VisualizationOverlay from "@/components/VisualizationOverlay";
 import SettingsPanel from "@/components/SettingsPanel";
+import NavigationSidebar from "@/components/NavigationSidebar";
+import DetailPanel from "@/components/DetailPanel";
 
 type Screen = "home" | "page";
+
+const PROJECTS = [
+  { name: "Brand Identity", color: "text-purple-600" },
+  { name: "Horizon Sync", color: "text-blue-600" },
+  { name: "Quarterly Goals", color: "text-emerald-600" },
+];
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
   const [currentPageId, setCurrentPageId] = useState<string>("");
   const [currentPageTitle, setCurrentPageTitle] = useState<string>("");
+  const [activeFilter, setActiveFilter] = useState<string>("Recent");
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   // Overlay states
   const [pdfOpen, setPdfOpen] = useState(false);
@@ -127,38 +138,69 @@ export default function Home() {
     }
   }, []);
 
+  const isProjectActive = PROJECTS.some(p => p.name === activeFilter);
+
   return (
-    <div className="relative">
-      {/* Global Settings Button - Top right, appears on hover */}
+    <div className="relative flex min-h-screen bg-white">
+      {/* Three Pane Layout */}
       {currentScreen === "home" && (
+        <>
+          {isSidebarVisible && (
+            <NavigationSidebar
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
+            />
+          )}
+          <main className="flex-1 overflow-y-auto">
+            {isProjectActive ? (
+              <ProjectDashboard
+                projectId={activeFilter.toLowerCase().replace(/\s/g, '-')}
+                projectTitle={activeFilter}
+                onBack={() => setActiveFilter("Recent")}
+              />
+            ) : (
+              <HomeScreen
+                onOpenPage={handleOpenPage}
+                externalFilter={activeFilter}
+                onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
+                isSidebarVisible={isSidebarVisible}
+              />
+            )}
+          </main>
+          {/* Detail Panel only on Home Screen for now, or maybe hide it on Project Dashboard if needed */}
+          {!isProjectActive && <DetailPanel />}
+        </>
+      )}
+
+      {currentScreen === "page" && (
+        <div className="flex-1 w-full">
+          <PageWorkspace
+            pageId={currentPageId}
+            pageTitle={currentPageTitle}
+            isProject={pageData[currentPageId]?.hasStudy === false} // Simple heuristic: no study cards = project-like
+            onBack={handleBackToHome}
+            onOpenPDF={() => setPdfOpen(true)}
+            onOpenCanvas={handleOpenCanvas}
+            onOpenStudyMode={() => setStudyModeOpen(true)}
+            onOpenQuizMode={() => setQuizModeOpen(true)}
+            onOpenVisualization={() => setVisualizationOpen(true)}
+            collaborators={collaborators}
+          />
+        </div>
+      )}
+
+      {/* Global Settings Button - Top right, appears on hover */}
+      {currentScreen === "home" && !isProjectActive && (
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setSettingsOpen(true)}
-          className="fixed top-4 right-4 z-20 opacity-40 focus-visible:opacity-100 hover:opacity-100 transition-opacity text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+          className="fixed top-4 right-[316px] z-20 opacity-40 focus-visible:opacity-100 hover:opacity-100 transition-opacity text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
           aria-label="Global Settings"
           title="Global Settings"
         >
           <SettingsIcon className="w-4 h-4" />
         </Button>
-      )}
-
-      {/* Main Screens */}
-      {currentScreen === "home" && <HomeScreen onOpenPage={handleOpenPage} />}
-
-      {currentScreen === "page" && (
-        <PageWorkspace
-          pageId={currentPageId}
-          pageTitle={currentPageTitle}
-          isProject={pageData[currentPageId]?.hasStudy === false} // Simple heuristic: no study cards = project-like
-          onBack={handleBackToHome}
-          onOpenPDF={() => setPdfOpen(true)}
-          onOpenCanvas={handleOpenCanvas}
-          onOpenStudyMode={() => setStudyModeOpen(true)}
-          onOpenQuizMode={() => setQuizModeOpen(true)}
-          onOpenVisualization={() => setVisualizationOpen(true)}
-          collaborators={collaborators}
-        />
       )}
 
       {/* Overlays and Panels - Only visible when needed */}
