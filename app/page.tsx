@@ -150,6 +150,7 @@ export default function Home() {
         <PageWorkspace
           pageId={currentPageId}
           pageTitle={currentPageTitle}
+          isProject={pageData[currentPageId]?.hasStudy === false} // Simple heuristic: no study cards = project-like
           onBack={handleBackToHome}
           onOpenPDF={() => setPdfOpen(true)}
           onOpenCanvas={handleOpenCanvas}

@@ -24,6 +24,7 @@ interface PageWorkspaceProps {
   onOpenQuizMode?: () => void;
   onOpenVisualization?: () => void;
   collaborators?: { id: string; name: string; color: string }[];
+  isProject?: boolean;
 }
 
 export default function PageWorkspace({
@@ -36,6 +37,7 @@ export default function PageWorkspace({
   onOpenQuizMode,
   onOpenVisualization,
   collaborators = [],
+  isProject = false,
 }: PageWorkspaceProps) {
   const [projectMapOpen, setProjectMapOpen] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["root"]));
@@ -53,10 +55,12 @@ export default function PageWorkspace({
   // Mock project structure
   const projectStructure = [
     { id: "custom-hooks", name: "Custom Hooks Deep Dive", type: "page" as const, icon: FileText },
-    { id: "react-patterns", name: "Advanced React Patterns", type: "folder" as const, icon: FileText, children: [
-      { id: "hoc-vs-hooks", name: "HOC vs Hooks", type: "page" as const, icon: FileText },
-      { id: "composition", name: "Composition Patterns", type: "page" as const, icon: FileText },
-    ]},
+    {
+      id: "react-patterns", name: "Advanced React Patterns", type: "folder" as const, icon: FileText, children: [
+        { id: "hoc-vs-hooks", name: "HOC vs Hooks", type: "page" as const, icon: FileText },
+        { id: "composition", name: "Composition Patterns", type: "page" as const, icon: FileText },
+      ]
+    },
     { id: "bio-respiration", name: "Biology - Cell Respiration", type: "page" as const, icon: FileText },
     { id: "brand-identity", name: "Brand Identity Project", type: "page" as const, icon: FileText },
   ];
@@ -159,9 +163,8 @@ export default function PageWorkspace({
     <div className="min-h-screen bg-white dark:bg-neutral-950 flex">
       {/* Project Map Sidebar */}
       <div
-        className={`fixed top-0 left-0 bottom-0 w-72 bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-950 dark:to-neutral-900 border-r border-neutral-200 dark:border-neutral-800 z-50 overflow-auto transition-transform duration-300 ease-in-out ${
-          projectMapOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 bottom-0 w-72 bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-950 dark:to-neutral-900 border-r border-neutral-200 dark:border-neutral-800 z-50 overflow-auto transition-transform duration-300 ease-in-out ${projectMapOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -175,7 +178,7 @@ export default function PageWorkspace({
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </div>
-          
+
           <div className="space-y-1.5">
             {projectStructure.map((item) => (
               <div key={item.id}>
@@ -198,11 +201,10 @@ export default function PageWorkspace({
                         {item.children.map((child) => (
                           <button
                             key={child.id}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                              child.id === pageId
-                                ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 text-blue-700 dark:text-blue-400 shadow-sm"
-                                : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                            }`}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${child.id === pageId
+                              ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 text-blue-700 dark:text-blue-400 shadow-sm"
+                              : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                              }`}
                           >
                             <child.icon className="w-4 h-4" />
                             <span className="flex-1 text-left">{child.name}</span>
@@ -213,11 +215,10 @@ export default function PageWorkspace({
                   </>
                 ) : (
                   <button
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                      item.id === pageId
-                        ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 text-blue-700 dark:text-blue-400 shadow-sm"
-                        : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${item.id === pageId
+                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 text-blue-700 dark:text-blue-400 shadow-sm"
+                      : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                      }`}
                   >
                     <item.icon className="w-4 h-4" />
                     <span className="flex-1 text-left">{item.name}</span>
@@ -231,33 +232,31 @@ export default function PageWorkspace({
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          projectMapOpen ? "ml-72" : "ml-0"
-        }`}
+        className={`flex-1 transition-all duration-300 ease-in-out ${projectMapOpen ? "ml-72" : "ml-0"
+          }`}
       >
         {/* Minimal Header */}
-        <div className="sticky top-0 z-10 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
-          <div className="max-w-5xl mx-auto px-8 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-white dark:bg-neutral-950 border-b-2 border-neutral-400 dark:border-neutral-700 shadow-md">
+          <div className={`${isProject ? 'max-w-5xl' : 'w-[98%]'} mx-auto px-8 py-4 flex items-center justify-between`}>
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 font-medium"
+                className="text-black hover:text-blue-600 dark:text-white dark:hover:text-blue-400 font-black text-sm uppercase tracking-widest"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-5 h-5 mr-2 stroke-[3]" />
                 Back
               </Button>
-              <div className="w-px h-5 bg-neutral-300 dark:bg-neutral-700" />
+              <div className="w-px h-5 bg-neutral-400 dark:bg-neutral-600" />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setProjectMapOpen(!projectMapOpen)}
-                className={`font-medium transition-colors ${
-                  projectMapOpen
-                    ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30"
-                    : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-                }`}
+                className={`font-medium transition-colors ${projectMapOpen
+                  ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30"
+                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+                  }`}
                 title="Project Map"
               >
                 <Map className="w-4 h-4" />
@@ -314,15 +313,15 @@ export default function PageWorkspace({
               {/* Collaboration Avatars - Subtle */}
               {collaborators.length > 0 && (
                 <>
-                  <div className="w-px h-5 bg-neutral-300 dark:bg-neutral-700 mx-1" />
+                  <div className="w-px h-5 bg-neutral-500 dark:bg-neutral-500 mx-1" />
                   <div className="flex -space-x-2">
                     {collaborators.map((collab) => (
                       <Avatar
                         key={collab.id}
-                        className="w-7 h-7 border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-200 dark:ring-neutral-800"
+                        className="w-8 h-8 border-2 border-black dark:border-white ring-2 ring-neutral-200 dark:ring-neutral-800 shadow-md"
                       >
                         <div
-                          className="w-full h-full rounded-full flex items-center justify-center text-xs font-semibold text-white"
+                          className="w-full h-full rounded-full flex items-center justify-center text-xs font-black text-white"
                           style={{ backgroundColor: collab.color }}
                         >
                           {collab.name[0]}
@@ -337,9 +336,9 @@ export default function PageWorkspace({
         </div>
 
         {/* Main Workspace - Clean, minimal */}
-        <div className="max-w-4xl mx-auto px-8 pt-8 pb-32">
+        <div className={`${isProject ? 'max-w-4xl' : 'w-[96%]'} mx-auto px-8 pt-10 pb-32`}>
           {/* Page Title */}
-          <h1 className="text-5xl font-light text-neutral-900 dark:text-neutral-100 mb-16 outline-none leading-tight">
+          <h1 className="text-7xl font-black text-black dark:text-white mb-20 outline-none leading-tight tracking-[calc(-0.04em)]">
             {pageTitle}
           </h1>
 
@@ -353,90 +352,89 @@ export default function PageWorkspace({
               >
                 {/* Task Block */}
                 {block.type === "task" && (
-                <div className="flex items-start gap-3 py-2">
-                  <button
-                    onClick={() => handleTaskToggle(block.id)}
-                    className="mt-1 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-                  >
-                    {block.completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <Circle className="w-5 h-5" />
-                    )}
-                  </button>
-                  <textarea
-                    ref={(el) => { inputRefs.current[block.id] = el; }}
-                    value={block.content}
-                    onChange={(e) => handleBlockChange(block.id, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, block.id)}
-                    onFocus={() => setFocusedBlock(block.id)}
-                    onBlur={() => setFocusedBlock(null)}
-                    className={`flex-1 bg-transparent border-none outline-none resize-none overflow-hidden text-neutral-900 dark:text-neutral-100 ${
-                      block.completed ? "line-through text-neutral-400" : ""
-                    }`}
-                    rows={1}
-                    style={{
-                      minHeight: "24px",
-                      lineHeight: "24px",
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Canvas Block */}
-              {block.type === "canvas" && (
-                <div className="flex items-start gap-3 py-2">
-                  <div className="text-neutral-400 mt-1">•</div>
-                  <div className="flex-1">
-                    <div className="text-neutral-700 dark:text-neutral-300 mb-2">
-                      {block.content}
-                    </div>
+                  <div className="flex items-start gap-3 py-2">
                     <button
-                      onClick={() => onOpenCanvas?.(block.id)}
-                      className="group/canvas relative overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
+                      onClick={() => handleTaskToggle(block.id)}
+                      className="mt-1 text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                     >
-                      <div className="w-48 h-32 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center">
-                        <Image className="w-8 h-8 text-neutral-400" />
-                      </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover/canvas:bg-black/5 transition-colors" />
+                      {block.completed ? (
+                        <CheckCircle2 className="w-6 h-6 text-green-800" />
+                      ) : (
+                        <Circle className="w-6 h-6 border-[3px] border-black dark:border-white rounded-full" />
+                      )}
                     </button>
+                    <textarea
+                      ref={(el) => { inputRefs.current[block.id] = el; }}
+                      value={block.content}
+                      onChange={(e) => handleBlockChange(block.id, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, block.id)}
+                      onFocus={() => setFocusedBlock(block.id)}
+                      onBlur={() => setFocusedBlock(null)}
+                      className={`flex-1 bg-transparent border-none outline-none resize-none overflow-hidden text-black dark:text-white font-black text-lg ${block.completed ? "line-through text-neutral-500 shadow-none border-none" : "shadow-none border-none"
+                        }`}
+                      rows={1}
+                      style={{
+                        minHeight: "24px",
+                        lineHeight: "24px",
+                      }}
+                    />
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Text Block */}
-              {block.type === "text" && (
-                <div className="flex items-start gap-3 py-2">
-                  <div className="text-neutral-400 mt-1">•</div>
-                  <textarea
-                    ref={(el) => { inputRefs.current[block.id] = el; }}
-                    value={block.content}
-                    onChange={(e) => handleBlockChange(block.id, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, block.id)}
-                    onFocus={() => setFocusedBlock(block.id)}
-                    onBlur={() => setFocusedBlock(null)}
-                    className="flex-1 bg-transparent border-none outline-none resize-none overflow-hidden text-neutral-900 dark:text-neutral-100"
-                    rows={1}
-                    style={{
-                      minHeight: "24px",
-                      lineHeight: "24px",
-                    }}
+                {/* Canvas Block */}
+                {block.type === "canvas" && (
+                  <div className="flex items-start gap-3 py-2">
+                    <div className="text-neutral-400 mt-1">•</div>
+                    <div className="flex-1">
+                      <div className="text-neutral-700 dark:text-neutral-300 mb-2">
+                        {block.content}
+                      </div>
+                      <button
+                        onClick={() => onOpenCanvas?.(block.id)}
+                        className="group/canvas relative overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
+                      >
+                        <div className="w-48 h-32 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center">
+                          <Image className="w-8 h-8 text-neutral-400" />
+                        </div>
+                        <div className="absolute inset-0 bg-black/0 group-hover/canvas:bg-black/5 transition-colors" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Text Block */}
+                {block.type === "text" && (
+                  <div className="flex items-start gap-3 py-2">
+                    <div className="text-neutral-400 mt-1">•</div>
+                    <textarea
+                      ref={(el) => { inputRefs.current[block.id] = el; }}
+                      value={block.content}
+                      onChange={(e) => handleBlockChange(block.id, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, block.id)}
+                      onFocus={() => setFocusedBlock(block.id)}
+                      onBlur={() => setFocusedBlock(null)}
+                      className="flex-1 bg-transparent border-none outline-none resize-none overflow-hidden text-black dark:text-white font-black text-lg leading-relaxed shadow-none"
+                      rows={1}
+                      style={{
+                        minHeight: "24px",
+                        lineHeight: "24px",
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Collaboration indicator - subtle */}
+                {focusedBlock === block.id && collaborators.length > 0 && (
+                  <div
+                    className="absolute -left-1 top-0 bottom-0 w-0.5 rounded-full"
+                    style={{ backgroundColor: collaborators[0].color }}
                   />
-                </div>
-              )}
-
-              {/* Collaboration indicator - subtle */}
-              {focusedBlock === block.id && collaborators.length > 0 && (
-                <div
-                  className="absolute -left-1 top-0 bottom-0 w-0.5 rounded-full"
-                  style={{ backgroundColor: collaborators[0].color }}
-                />
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
-  </div>
   );
 }

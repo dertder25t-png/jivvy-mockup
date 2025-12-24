@@ -31,8 +31,6 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
   // Universal input
   const [query, setQuery] = useState("");
   const [createdItems, setCreatedItems] = useState<CreatedItem[]>([]);
-  // Context chips
-  const [chips, setChips] = useState<Array<{ id: string; label: string; action: () => void }>>([]);
 
   // Calendar State: Item ID -> Day Index (0-6) or null (Unscheduled)
   const [itemAssignments, setItemAssignments] = useState<Record<string, number | null>>({});
@@ -196,52 +194,6 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
     }
   };
 
-  // Suggestion chips based on time and (optional) current class from localStorage
-  useEffect(() => {
-    const now = new Date();
-    const hour = now.getHours();
-    const list: Array<{ id: string; label: string; action: () => void }> = [];
-
-    const createAndOpenPage = (title: string) => {
-      const id = `${title.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
-      const entry: CreatedItem = { id, kind: "page", title, ts: Date.now() };
-      setCreatedItems((prev) => {
-        const next = [entry, ...prev].slice(0, 50);
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem("createdItems", JSON.stringify(next));
-          // Also add to last opened for Jump-Back tape
-          const lastRaw = window.localStorage.getItem("lastOpenedItems");
-          const lastArr = lastRaw ? JSON.parse(lastRaw) : [];
-          const tapeEntry = { id, type: "study", title, subtitle: "Study: 12 study cards", ts: Date.now() };
-          const filtered = Array.isArray(lastArr) ? lastArr.filter((x: any) => x.id !== id) : [];
-          window.localStorage.setItem("lastOpenedItems", JSON.stringify([tapeEntry, ...filtered].slice(0, 10)));
-        }
-        return next;
-      });
-      onOpenPage(id);
-    };
-
-    if (hour >= 6 && hour <= 10) {
-      list.push({ id: "daily-plan", label: "Daily Plan", action: () => createAndOpenPage("Daily Plan") });
-    }
-    if (hour >= 17 && hour <= 21) {
-      list.push({ id: "daily-review", label: "Daily Review", action: () => createAndOpenPage("Daily Review") });
-    }
-    try {
-      if (typeof window !== "undefined") {
-        const scheduledClass = window.localStorage.getItem("scheduledClass");
-        if (scheduledClass) {
-          list.push({ id: "class-notes", label: `${scheduledClass} Notes`, action: () => createAndOpenPage(`${scheduledClass} Notes`) });
-        } else {
-          // Fallback demo chip
-          list.push({ id: "bio-notes", label: "Biology 101 Notes", action: () => createAndOpenPage("Biology 101 Notes") });
-        }
-      }
-    } catch {
-      // ignore
-    }
-    setChips(list);
-  }, [onOpenPage]);
 
   const parseAndCreate = () => {
     const raw = query.trim();
@@ -295,30 +247,36 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-900">
-      <div className={`${viewMode === 'calendar' ? 'max-w-[95%]' : 'max-w-3xl'} mx-auto px-8 py-20 transition-all duration-500`}>
-        {/* Jump-Back Tape */}
-        {resumeItems.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3 text-neutral-500">
-              <History className="w-4 h-4" />
-              <span className="text-xs font-medium uppercase tracking-wider">Jump Back</span>
-            </div>
-            <div className="flex items-center gap-3 overflow-x-auto">
-              {resumeItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => onOpenPage(item.id)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-xs"
-                  title={item.title}
-                >
-                  <item.icon className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
-                  <span className="text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-[160px]">{item.title}</span>
-                </button>
-              ))}
-            </div>
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+      <div className="w-[98%] mx-auto px-8 py-10 transition-all duration-500">
+        {/* Header: Greeting + Jump Back */}
+        <div className="flex flex-col md:flex-row md:items-end gap-8 mb-10">
+          <div>
+            <h1 className="text-4xl text-neutral-900 dark:text-neutral-100 font-medium tracking-tight">Good evening, Alex</h1>
           </div>
-        )}
+
+          {resumeItems.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
+                <History className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Jump Back</span>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                {resumeItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onOpenPage(item.id)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-neutral-400 dark:border-neutral-600 bg-white dark:bg-neutral-900 hover:border-neutral-500 dark:hover:border-neutral-500 shadow-md hover:shadow-lg transition-all whitespace-nowrap"
+                    title={item.title}
+                  >
+                    <item.icon className="w-4 h-4 text-black dark:text-white" />
+                    <span className="text-sm font-bold text-black dark:text-white">{item.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Universal Torpedo Input */}
         <div className="mb-6">
@@ -333,14 +291,13 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
                 }
               }}
               placeholder="Type anything… e.g. 'Buy milk', 'Biology 101 Notes', '/project Food Cart'"
-              className="h-14 text-xl px-5 rounded-2xl border-neutral-300 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/60 shadow-sm"
+              className="h-14 text-xl px-5 rounded-2xl border-2 border-neutral-500 dark:border-neutral-600 bg-white dark:bg-neutral-900 shadow-xl focus:ring-4 focus:ring-blue-500/30 transition-all placeholder:text-neutral-500"
             />
             <div className="absolute right-2 top-2">
               <Button
                 size="sm"
-                variant="secondary"
                 onClick={parseAndCreate}
-                className="rounded-xl"
+                className="h-10 px-4 rounded-xl bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 shadow-lg font-bold"
               >
                 <Rocket className="w-4 h-4 mr-1" />
                 Go
@@ -349,46 +306,34 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
           </div>
         </div>
 
-        {/* Context Chips */}
-        {chips.length > 0 && (
-          <div className="mb-12 flex items-center gap-2 flex-wrap">
-            {chips.map((chip) => (
-              <Button key={chip.id} variant="ghost" size="sm" onClick={chip.action} className="rounded-full border border-neutral-200 dark:border-neutral-800">
-                {chip.label}
-              </Button>
-            ))}
-          </div>
-        )}
-
-        {/* Greeting */}
-        <div className="mb-8">
-          <h1 className="text-4xl text-neutral-400 dark:text-neutral-600 font-light">Good evening, Alex</h1>
-        </div>
-
         {/* Today Section */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2.5">
-              <CheckSquare className="w-4 h-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">
+              <CheckSquare className="w-6 h-6 text-black dark:text-white" />
+              <h2 className="text-lg font-black text-black dark:text-white uppercase tracking-tighter">
                 {filter === "Recent" ? "Recent" : filter === "Pinned" ? "Pinned" : "Scheduled"}
               </h2>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex bg-neutral-100 dark:bg-neutral-900 rounded-lg p-1 mr-2">
-                <Button variant="ghost" size="icon-sm" onClick={() => setViewMode("list")} aria-label="List view" className={viewMode === "list" ? "bg-white shadow-sm text-neutral-900" : "text-neutral-500 hover:text-neutral-900"}>
-                  <List className="w-4 h-4" />
+              <div className="flex bg-neutral-300 dark:bg-neutral-800 rounded-xl p-1 mr-4 border-2 border-neutral-400 dark:border-neutral-600 shadow-sm">
+                <Button variant="ghost" size="icon-sm" onClick={() => setViewMode("list")} aria-label="List view" className={viewMode === "list" ? "bg-white dark:bg-neutral-700 shadow-inner text-black dark:text-white font-bold" : "text-neutral-700 dark:text-neutral-300 hover:text-black"}>
+                  <List className="w-5 h-5 stroke-[2.5]" />
                 </Button>
-                <Button variant="ghost" size="icon-sm" onClick={() => setViewMode("grid")} aria-label="Grid view" className={viewMode === "grid" ? "bg-white shadow-sm text-neutral-900" : "text-neutral-500 hover:text-neutral-900"}>
-                  <LayoutGrid className="w-4 h-4" />
+                <Button variant="ghost" size="icon-sm" onClick={() => setViewMode("grid")} aria-label="Grid view" className={viewMode === "grid" ? "bg-white dark:bg-neutral-700 shadow-inner text-black dark:text-white font-bold" : "text-neutral-700 dark:text-neutral-300 hover:text-black"}>
+                  <LayoutGrid className="w-5 h-5 stroke-[2.5]" />
                 </Button>
-                <Button variant="ghost" size="icon-sm" onClick={() => setViewMode("calendar")} aria-label="Calendar view" className={viewMode === "calendar" ? "bg-white shadow-sm text-neutral-900" : "text-neutral-500 hover:text-neutral-900"}>
-                  <Calendar className="w-4 h-4" />
+                <Button variant="ghost" size="icon-sm" onClick={() => setViewMode("calendar")} aria-label="Calendar view" className={viewMode === "calendar" ? "bg-white dark:bg-neutral-700 shadow-inner text-black dark:text-white font-bold" : "text-neutral-700 dark:text-neutral-300 hover:text-black"}>
+                  <Calendar className="w-5 h-5 stroke-[2.5]" />
                 </Button>
               </div>
-              <Button variant={filter === "Recent" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("Recent")}>Recent</Button>
-              <Button variant={filter === "Pinned" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("Pinned")}>Pinned</Button>
-              <Button variant={filter === "Scheduled" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("Scheduled")}>Scheduled</Button>
+              <div className="flex items-center gap-1">
+                <Button variant={filter === "Recent" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("Recent")} className={`font-black uppercase tracking-widest text-xs border ${filter === 'Recent' ? 'border-black bg-black text-white' : 'border-neutral-400'}`}>Recent</Button>
+                <Button variant={filter === "Pinned" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("Pinned")} className={`font-black uppercase tracking-widest text-xs border ${filter === 'Pinned' ? 'border-black bg-black text-white' : 'border-neutral-400'}`}>Pinned</Button>
+                <Button variant={filter === "Scheduled" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("Scheduled")} className={`font-black uppercase tracking-widest text-xs border ${filter === 'Scheduled' ? 'border-black bg-black text-white' : 'border-neutral-400'}`}>Scheduled</Button>
+                <div className="w-px h-4 bg-neutral-300 mx-2" />
+                <Button variant="ghost" size="sm" className="font-black uppercase tracking-widest text-xs text-blue-700 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-900/50 hover:bg-blue-600 hover:text-white transition-all ml-2 shadow-sm">View All</Button>
+              </div>
             </div>
           </div>
 
@@ -401,39 +346,40 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
                       key={day}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, i)}
-                      className="min-h-[300px] p-2 border border-neutral-100 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 transition-colors hover:bg-neutral-100/50 dark:hover:bg-neutral-900"
+                      className="min-h-[450px] p-0 border-2 border-neutral-400 dark:border-neutral-600 rounded-2xl bg-white dark:bg-neutral-900 shadow-xl overflow-hidden transition-all hover:border-black dark:hover:border-white"
                     >
-                      <div className="text-xs font-medium text-neutral-400 mb-3 text-center sticky top-0 bg-transparent uppercase tracking-widest">{day}</div>
-                      {visibleItems
-                        .filter((item) => itemAssignments[item.id] === i)
-                        .map((item) => (
-                          <div
-                            key={item.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, item.id)}
-                            onClick={() => onOpenPage(item.id)}
-                            className="mb-2 p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm text-xs cursor-pointer hover:border-blue-300 hover:shadow-md transition-all active:cursor-grabbing group"
-                          >
-                            <div className="font-medium truncate text-neutral-900 dark:text-neutral-100 mb-1">{item.title}</div>
-                            <div className="text-[10px] text-neutral-500 truncate">{item.subtitle}</div>
-                          </div>
-                        ))}
+                      <div className="text-sm font-black text-black dark:text-white text-center bg-neutral-100 dark:bg-neutral-800 py-3 border-b-2 border-neutral-400 dark:border-neutral-600 uppercase tracking-tighter sticky top-0 z-10">{day}</div>
+                      <div className="p-2 space-y-2">
+                        {visibleItems
+                          .filter((item) => itemAssignments[item.id] === i)
+                          .map((item) => (
+                            <div
+                              key={item.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, item.id)}
+                              onClick={() => onOpenPage(item.id)}
+                              className="mb-3 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg border-2 border-neutral-400 dark:border-neutral-600 shadow-sm text-xs cursor-pointer hover:border-black dark:hover:border-white hover:shadow-md transition-all active:cursor-grabbing group"
+                            >
+                              <div className="font-black truncate text-black dark:text-white mb-1.5 text-sm">{item.title}</div>
+                              <div className="text-[11px] text-neutral-800 dark:text-neutral-200 font-bold truncate">{item.subtitle}</div>
+                            </div>
+                          ))}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Unscheduled Items Area */}
               <div
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, null)}
-                className="border-t-2 border-dashed border-neutral-200 dark:border-neutral-800 pt-6 mt-4"
+                className="border-t-4 border-dashed border-neutral-400 dark:border-neutral-600 pt-8 mt-10"
               >
-                <div className="flex items-center gap-2 mb-4 text-neutral-500 px-2">
-                  <ClipboardList className="w-4 h-4" />
-                  <h3 className="text-sm font-medium uppercase tracking-wider">Unscheduled</h3>
+                <div className="flex items-center gap-3 mb-6 text-black dark:text-white px-2">
+                  <ClipboardList className="w-6 h-6 stroke-[3]" />
+                  <h3 className="text-lg font-black uppercase tracking-tighter">Unscheduled</h3>
                 </div>
-                <div className="flex flex-wrap gap-3 min-h-[100px] p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/30 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-900/50">
+                <div className="flex flex-wrap gap-4 min-h-[120px] p-6 rounded-2xl bg-neutral-200 dark:bg-neutral-800/50 border-2 border-neutral-300 dark:border-neutral-700 transition-colors">
                   {visibleItems
                     .filter((item) => itemAssignments[item.id] === null)
                     .map((item) => (
@@ -442,10 +388,10 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
                         draggable
                         onDragStart={(e) => handleDragStart(e, item.id)}
                         onClick={() => onOpenPage(item.id)}
-                        className="w-48 p-3 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm text-xs cursor-pointer hover:border-blue-300 hover:shadow-md transition-all active:cursor-grabbing"
+                        className="w-56 p-4 bg-white dark:bg-neutral-800 rounded-lg border-2 border-neutral-400 dark:border-neutral-600 shadow-md text-xs cursor-pointer hover:border-black dark:hover:border-white transition-all active:cursor-grabbing"
                       >
-                        <div className="font-medium truncate text-neutral-900 dark:text-neutral-100 mb-1">{item.title}</div>
-                        <div className="text-[10px] text-neutral-500 truncate">{item.subtitle}</div>
+                        <div className="font-black truncate text-black dark:text-white mb-1.5 text-sm">{item.title}</div>
+                        <div className="text-[11px] text-neutral-800 dark:text-neutral-200 font-bold truncate">{item.subtitle}</div>
                       </div>
                     ))}
                   {visibleItems.filter((item) => itemAssignments[item.id] === null).length === 0 && (
@@ -457,25 +403,25 @@ export default function HomeScreen({ onOpenPage }: { onOpenPage: (id: string) =>
               </div>
             </div>
           ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-2 gap-4" : "space-y-4"}>
+            <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-4"}>
               {visibleItems.map((item) => (
                 <Card
                   key={item.id}
                   onClick={() => onOpenPage(item.id)}
-                  className={`cursor-pointer transition-all border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 ${viewMode === 'grid' ? 'p-4 flex flex-col items-start h-full' : 'p-6 flex items-start gap-4'}`}
+                  className={`cursor-pointer transition-all border-2 border-neutral-400 dark:border-neutral-600 hover:border-black dark:hover:border-white shadow-lg hover:shadow-2xl ${viewMode === 'grid' ? 'p-8 flex flex-col items-start h-full' : 'p-8 flex items-start gap-6'}`}
                 >
-                  <div className={`rounded-xl bg-neutral-100 dark:bg-neutral-900 ${viewMode === 'grid' ? 'p-2 mb-3' : 'p-2.5'}`}>
-                    <item.icon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+                  <div className={`rounded-2xl bg-black dark:bg-white border-2 border-black dark:border-white ${viewMode === 'grid' ? 'p-4 mb-6' : 'p-4'}`}>
+                    <item.icon className="w-7 h-7 text-white dark:text-black" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mb-1 font-semibold">
+                    <div className="text-[11px] uppercase tracking-[0.3em] text-neutral-600 dark:text-neutral-300 mb-2 font-black">
                       {item.type}
                     </div>
-                    <h3 className={`font-medium text-neutral-900 dark:text-neutral-100 ${viewMode === 'grid' ? 'text-base mb-1 line-clamp-2' : 'text-lg mb-2'}`}>
+                    <h3 className={`font-black text-black dark:text-white ${viewMode === 'grid' ? 'text-xl mb-2 line-clamp-2 leading-tight' : 'text-2xl mb-3'}`}>
                       {item.title}
                     </h3>
                     {item.subtitle && (
-                      <p className={`text-neutral-600 dark:text-neutral-400 ${viewMode === 'grid' ? 'text-sm line-clamp-2' : 'text-base'}`}>{item.subtitle}</p>
+                      <p className={`text-neutral-800 dark:text-neutral-200 font-bold ${viewMode === 'grid' ? 'text-sm line-clamp-3' : 'text-lg'}`}>{item.subtitle}</p>
                     )}
                   </div>
                 </Card>
